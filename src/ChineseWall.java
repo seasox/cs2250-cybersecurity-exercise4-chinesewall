@@ -1,9 +1,17 @@
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 public class ChineseWall
 {
 	/**
 	 * Contains the current test case data.
 	 */
 	static InputFileParser _testcaseParser;
+
+	/** The requested companies per subject, used for locking objects in the same COI class */
+	private static Map<Integer, Set<Integer>> requestedCompaniesForSubject;
 
 	/**
 	 * Program entry point.
@@ -16,9 +24,7 @@ public class ChineseWall
 		// Read test case from stdin
 		_testcaseParser = new InputFileParser(System.in);
 
-		/* ************************************** */
-		/* TODO Add optional initializations here */
-		/* ************************************** */
+		requestedCompaniesForSubject = new HashMap<>();
 
 		// NOTE Be careful with integer comparisons:
 		//      The "==" operator only works with variables of type "int", use Integer.equals for all others
@@ -50,9 +56,22 @@ public class ChineseWall
 	 */
 	public static boolean handleAccessRequest(Integer subjectId, Integer objectId)
 	{
-		/* *************************************** */
-		/* TODO Add access request processing here */
-		/* *************************************** */
+		Set<Integer> companies = requestedCompaniesForSubject.getOrDefault(subjectId, new HashSet<>());
+		Integer requestedCompany = _testcaseParser.ObjectCompanies.get(objectId);
+		Integer objectCoi = _testcaseParser.CompanyCois.get(requestedCompany);
+		// check previously granted COI classes
+		for (Integer grantedCompany: companies) {
+			// access to this company has been granted by a previous access. we good
+			if (requestedCompany.equals(grantedCompany)) {
+				break;
+			}
+			// the requested company does have the same COI class as ya previousl granted company. Deny access
+			if (_testcaseParser.CompanyCois.get(grantedCompany).equals(objectCoi)) {
+				return false;
+			}
+		}
+		companies.add(requestedCompany);
+		requestedCompaniesForSubject.put(subjectId, companies);
 		return true;
 	}
 }
